@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework import viewsets
-from .models import Group, Student, FileModel, ImageModel
+from .models import Group, Student, FileModel, ImageModel, GroupScore, Scores, Entry, Choice, Vote
 from .serializers import GroupSerializer, StudentSerializer, FileSerializer, MultipleFileSerializer, ImageSerializer, \
-    MultipleImageSerializer
+    MultipleImageSerializer, ScoreSerializer, ScoresSerializer, EntrySerializer, ChoiceSerializer, VoteSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.http import JsonResponse
@@ -22,6 +22,42 @@ class GroupViewSet(viewsets.ModelViewSet):
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
+
+
+class ScoreViewSet(viewsets.ModelViewSet):
+    queryset = GroupScore.objects.all()
+    serializer_class = ScoreSerializer
+
+
+class ScoresViewSet(viewsets.ModelViewSet):
+    queryset = Scores.objects.all()
+    serializer_class = ScoresSerializer
+
+
+class EntryViewSet(viewsets.ModelViewSet):
+    queryset = Entry.objects.all()
+    serializer_class = EntrySerializer
+
+    # def savesum(self, request):
+    #     first = 5
+    #     second = 6
+    #     model1 = Model1(first=first, second=second)
+    #     model1.save()
+    #
+    #     # then sum the values and save it to the second model
+    #     sum = first + second
+    #     model2 = Model2(Model1=model1, sum=sum)
+    #     model2.save()
+
+
+class ChoiceViewSet(viewsets.ModelViewSet):
+    queryset = Choice.objects.all()
+    serializer_class = ChoiceSerializer
+
+
+class VoteViewSet(viewsets.ModelViewSet):
+    queryset = Vote.objects.all()
+    serializer_class = VoteSerializer
 
 
 class FileViewSet(viewsets.ModelViewSet):

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.serializers import Serializer, FileField
 
-from .models import Group, Student, FileModel, ImageModel
+from .models import Group, Student, FileModel, ImageModel, GroupScore, Scores, Entry, Choice, Vote
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -13,6 +13,38 @@ class GroupSerializer(serializers.ModelSerializer):
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
+        fields = '__all__'
+
+
+class ScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupScore
+        fields = '__all__'
+
+
+class ScoresSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Scores
+        fields = '__all__'
+
+
+class EntrySerializer(serializers.ModelSerializer):
+    computed = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Entry
+        fields = '__all__'
+
+
+class ChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Choice
+        fields = '__all__'
+
+
+class VoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vote
         fields = '__all__'
 
 

@@ -7,6 +7,12 @@ router = DefaultRouter()
 router.register('group', views.GroupViewSet)
 router.register('student', views.StudentViewSet)
 router.register('file', views.FileViewSet)
+router.register('score', views.ScoreViewSet)
+router.register('scores', views.ScoresViewSet)
+router.register('entry', views.EntryViewSet)
+router.register('choice', views.ChoiceViewSet)
+router.register('vote', views.VoteViewSet)
+
 # urlpatterns = [
 #     path("", views.index, name="index"),
 # ]
