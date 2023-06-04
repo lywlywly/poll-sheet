@@ -1,5 +1,10 @@
 .idea
+.vscode
 .DS_Store
+
+# Python venv files
+.venv
 bin
 lib
 lib64
+node_modules
