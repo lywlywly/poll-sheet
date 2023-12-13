@@ -90,7 +90,7 @@
         <table class="group">
           <tr>
             <th>Name</th>
-            <th>NetID</th>
+            <th>NetId</th>
           </tr>
           <tr v-for="(student, index) in groupedStudents[key]" :key="index">
             <td>{{ student.name }}</td>
@@ -142,7 +142,7 @@
     </el-tabs>
   </div>
   <div class="submit-button">
-    <!-- <button @click="preview">Preview</button> -->
+    <button @click="preview">Preview</button>
     <button v-if="loggedIn" @click="postVotes">Submit</button>
   </div>
   <footer></footer>
@@ -217,8 +217,8 @@ export default {
       );
     };
 
-    const findChoiceId = (e, v) => (x) =>
-      x["poll"] == e && x["choice_text"] == v;
+    const isMatchingChoice = (entryId, choiceText) => (choice) =>
+      choice["poll"] == entryId && choice["choice_text"] == choiceText;
 
     function loadlinks() {
       const len = Object.keys(groupedStudents.value).length;
@@ -256,35 +256,35 @@ export default {
     };
 
     const postVotePayload = computed(() => {
-      const post = [];
-      for (let i in updatedGroupedEntries.value) {
-        for (let j = 0; j < updatedGroupedEntries.value[i].length; j++) {
-          if (updatedGroupedEntries.value[i][j]["type"] == CHOICE_NUM.value) {
-            const rawScore = updatedGroupedEntries.value[i][j]["score"];
-            const choiceText = rawScore > 0 ? rawScore : 1;
-            const pollId = updatedGroupedEntries.value[i][j]["id"];
-            const choiceId = choices.value.filter(
-              findChoiceId(pollId, choiceText)
-            )[0]["id"];
-            post.push({
-              entry: pollId,
-              choice: choiceId,
-            });
-          } else if (updatedGroupedEntries.value[i][j]["type"] == TEXT.value) {
-            var choiceId = choices.value.filter(
-              findChoiceId(
-                updatedGroupedEntries.value[i][j]["id"],
-                "Enter your words"
-              )
-            )[0]["id"];
-            post.push({
-              entry: updatedGroupedEntries.value[i][j]["id"],
-              choice: choiceId,
-              content: updatedGroupedEntries.value[i][j]["content"],
-            });
+      const processChoiceEntry = (entry) => {
+        const { id: entryId, score } = entry;
+        const choiceText = score > 0 ? score : 1;
+        const choiceId = choices.value.find(
+          isMatchingChoice(entryId, choiceText)
+        ).id;
+        return { entry: entryId, choice: choiceId };
+      };
+
+      const processTextEntry = (entry) => {
+        const { id: entryId, content } = entry;
+        console.log(content);
+        const choiceId = choices.value.find(
+          isMatchingChoice(entryId, "Enter your words")
+        ).id;
+        return { entry: entryId, choice: choiceId, content: content };
+      };
+
+      const post = Object.values(updatedGroupedEntries.value)
+        .flat()
+        .reduce((accumulator, entry) => {
+          if (entry.type === CHOICE_NUM.value) {
+            return [...accumulator, processChoiceEntry(entry)];
+          } else if (entry.type === TEXT.value) {
+            return [...accumulator, processTextEntry(entry)];
           }
-        }
-      }
+          return accumulator;
+        }, []);
+
       return post;
     });
 
@@ -412,7 +412,7 @@ export default {
       groupedEntires,
       choices,
       updatedGroupedEntries,
-      // postVotePayload,
+      postVotePayload,
       groupedMyCurrentVotes,
       token,
       loggedIn,
@@ -426,7 +426,7 @@ export default {
       submitFile,
       loadlinks,
       postVotes,
-      findChoiceId,
+      isMatchingChoice,
     };
   },
 
@@ -450,7 +450,9 @@ export default {
       this.resetLoginForm();
     },
 
-    preview() {},
+    preview() {
+      console.log(this.postVotePayload);
+    },
 
     resetLoginForm() {
       this.$refs.loginForm.reset();
