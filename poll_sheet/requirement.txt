@@ -1,0 +1,7 @@
+django
+Pillow
+djangorestframework
+django-cors-headers
+dj_rest_auth
+pandas
+openpyxl
