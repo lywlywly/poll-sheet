@@ -319,7 +319,7 @@ export default {
       const sortedData = Object.fromEntries(
         Object.entries(result).map(([key, entries]) => [
           key,
-          entries.sort(myOrder),
+          entries.slice().sort(myOrder),
         ])
       );
 
@@ -329,61 +329,49 @@ export default {
 
     const myCurrentVote = ref([]);
 
-    function getSafe(fn, defaultVal) {
-      try {
-        return fn();
-      } catch (e) {
-        return defaultVal;
-      }
-    }
-
-    function entryIdByChoiceId(choiceId) {
-      return choices.value.filter((c) => c.id == choiceId)[0].poll;
-    }
+    const entryIdByChoiceId = (choiceId) =>
+      choices.value.find((choice) => choice.id == choiceId).poll;
 
     const groupedMyCurrentVotes = computed(() => {
       if (!loggedIn.value) return {};
       const result_0 = myCurrentVote.value.map((m) => ({
-        group_id: getSafe(
-          () =>
-            entries.value.filter((e) => e.id == entryIdByChoiceId(m.choice))[0]
-              .group_id
-        ),
-        entry: getSafe(
-          () =>
-            entries.value.filter((e) => e.id == entryIdByChoiceId(m.choice))[0]
-              .text
-        ),
-        type: getSafe(
-          () =>
-            entries.value.filter((e) => e.id == entryIdByChoiceId(m.choice))[0]
-              .type
-        ),
+        group_id: entries.value.find((e) => e.id == entryIdByChoiceId(m.choice))
+          .group_id,
+        entry: entries.value.find((e) => e.id == entryIdByChoiceId(m.choice))
+          .text,
+        type: entries.value.find((e) => e.id == entryIdByChoiceId(m.choice))
+          .type,
         id: m.id,
-        choice: getSafe(
-          () => choices.value.filter((c) => c.id == m.choice)[0].choice_text
-        ),
+        choice: choices.value.find((e) => e.id == m.choice).choice_text,
         content: m.content,
       }));
-      const result = result_0.reduce(function (r, a) {
-        r[a.group_id] = r[a.group_id] || [];
-        r[a.group_id].push({
-          entry: a["entry"],
-          type: a["type"],
-          group_id: a["group_id"],
-          choice: a["choice"],
-          content: a["content"],
-        });
-        return r;
+      // const result = result_0.reduce((r, a) => {
+      //   const { group_id, entry, type, choice, content } = a;
+      //   r[group_id] = r[group_id] || [];
+      //   r[group_id].push({ entry, type, group_id, choice, content });
+      //   return r;
+      // }, Object.create(null));
+      const result = result_0.reduce((acc, curr) => {
+        const { group_id, entry, type, choice, content } = curr;
+        return {
+          ...acc,
+          [group_id]: [
+            ...(acc[group_id] || []),
+            { entry, type, group_id, choice, content },
+          ],
+        };
       }, Object.create(null));
-      // reorder to ["Content", "Delivery", "Any other words"]
-      Object.keys(result).forEach((e) =>
-        result[e].sort((a, b) => {
-          return ORDER_MAP[a.entry] - ORDER_MAP[b.entry];
-        })
+      // reorder to  ["Delivery", "Content", "Engagement", "Any other words"];
+      const sortedData = Object.fromEntries(
+        Object.entries(result).map(([key, arr]) => [
+          key,
+          arr
+            .slice()
+            .sort((a, b) => ORDER.indexOf(a.entry) - ORDER.indexOf(b.entry)),
+        ])
       );
 
-      return result;
+      return sortedData;
     });
 
     const myCurrentVotePks = computed(() => {

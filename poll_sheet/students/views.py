@@ -22,6 +22,7 @@ from django.db.models import F
 import pandas as pd
 from django.http import HttpResponse
 from io import BytesIO
+from rest_framework import permissions
 
 
 # Create your views here.
@@ -46,6 +47,7 @@ class EntryReadOnlyViewSet(viewsets.ModelViewSet):
 
 
 class EntryViewSet(viewsets.ModelViewSet):
+    # permission_classes = (permissions.IsAuthenticated,)
     permission_classes = (IsStaff,)
     queryset = Entry.objects.all()
     serializer_class = EntrySerializer
