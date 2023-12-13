@@ -1,6 +1,5 @@
 <template>
   <h1>Voting Form</h1>
-  <!-- <h3 v-if="loggedIn">You are logged in</h3> -->
   <h3 v-if="!loggedIn">You are not logged in</h3>
   <div v-if="loggedIn">
     Name:
@@ -8,7 +7,7 @@
   </div>
   <div v-if="loggedIn">
     Group:
-    <div class="inline-bold">{{ loginInfo.group }}</div>
+    <div class="inline-bold">{{ loginInfo.status ?? loginInfo.group }}</div>
   </div>
 
   <div class="login">
@@ -143,7 +142,7 @@
     </el-tabs>
   </div>
   <div class="submit-button">
-    <button @click="preview">Preview</button>
+    <!-- <button @click="preview">Preview</button> -->
     <button v-if="loggedIn" @click="postVotes">Submit</button>
   </div>
   <footer></footer>
@@ -169,6 +168,18 @@ import * as constants from "../api/consts.js";
 import { ref, computed, readonly, reactive } from "vue";
 export default {
   setup: function () {
+    // constants
+    const CHOICE_NUM = readonly(ref(constants.CHOICE_NUM));
+    const TEXT = readonly(ref(constants.TEXT));
+    const ORDER = readonly(constants.ORDER);
+    const ORDER_MAP = readonly(constants.ORDER_MAP);
+
+    const token = ref("");
+    const loggedIn = ref(false);
+    const activeName0 = ref(0);
+    const email = ref("");
+    const password = ref("");
+    const loginInfo = ref("");
     const file = ref(null);
     const links = ref([
       "about:blank",
@@ -176,11 +187,16 @@ export default {
       "about:blank",
       "about:blank",
     ]);
+    const students = ref([]);
+    const entries = ref([]);
+    const choices = ref([]);
+    const updatedGroupedEntries = ref({});
+
     const uploadFile = (event) => {
       file.value = event.target.files[0];
     };
     const submitFile = (id) => {
-      var formdata = new FormData();
+      const formdata = new FormData();
       formdata.append("file", file.value);
       formdata.append("id", id);
 
@@ -205,8 +221,8 @@ export default {
       x["poll"] == e && x["choice_text"] == v;
 
     function loadlinks() {
-      var len = Object.keys(groupedStudents.value).length;
-      for (var i = 0; i < len; i++) {
+      const len = Object.keys(groupedStudents.value).length;
+      for (let i = 0; i < len; i++) {
         let locali = i;
         getFile(i + 1, config.value).then((response) => {
           links.value[locali] = response.data.file;
@@ -222,20 +238,9 @@ export default {
     //   console.log(err); // logs all errors
     // }
 
-    const students = ref([]);
-    const entries = ref([]);
-    const choices = ref([]);
-    const updatedGroupedEntries = ref({});
-    const rr = ref(0);
-
     const loadMyVote = async () => {
       const response = await getVote(config.value);
       myCurrentVote.value = response.data;
-    };
-
-    const preview = async () => {
-      // console.log(groupedMyCurrentVotes.length);
-      // console.log(groupedMyCurrentVotes);
     };
 
     const postVotes = async () => {
@@ -338,7 +343,7 @@ export default {
 
     const groupedMyCurrentVotes = computed(() => {
       if (!loggedIn.value) return {};
-      var result_0 = myCurrentVote.value.map((m) => ({
+      const result_0 = myCurrentVote.value.map((m) => ({
         group_id: getSafe(
           () =>
             entries.value.filter((e) => e.id == entryIdByChoiceId(m.choice))[0]
@@ -360,7 +365,7 @@ export default {
         ),
         content: m.content,
       }));
-      var result = result_0.reduce(function (r, a) {
+      const result = result_0.reduce(function (r, a) {
         r[a.group_id] = r[a.group_id] || [];
         r[a.group_id].push({
           entry: a["entry"],
@@ -383,7 +388,7 @@ export default {
 
     const myCurrentVotePks = computed(() => {
       console.log(myCurrentVote.value);
-      var result = myCurrentVote.value.map((m) => m.id);
+      const result = myCurrentVote.value.map((m) => m.id);
       return result;
     });
 
@@ -392,19 +397,6 @@ export default {
         Authorization: "",
       },
     });
-
-    const token = ref("");
-    const loggedIn = ref(false);
-    const activeName0 = ref(0);
-    const email = ref("");
-    const password = ref("");
-    const loginInfo = ref("");
-
-    // constants
-    const CHOICE_NUM = readonly(ref(constants.CHOICE_NUM));
-    const TEXT = readonly(ref(constants.TEXT));
-    const ORDER = readonly(constants.ORDER);
-    const ORDER_MAP = readonly(constants.ORDER_MAP);
 
     return {
       config,
@@ -434,7 +426,6 @@ export default {
       submitFile,
       loadlinks,
       postVotes,
-      preview,
       findChoiceId,
     };
   },
@@ -445,42 +436,21 @@ export default {
 
   methods: {
     async submitLoginForm() {
+      let response;
       try {
-        const response = await login(this.email, this.password);
-        this.token = response.data.key;
-        if (this.token == null) {
-          this.loggedIn = false;
-        } else {
-          this.loggedIn = true;
-          localStorage.token = this.token;
-          this.config.headers.Authorization = "token " + this.token;
-          this._load();
-          try {
-            const userInfoResponse = await getCurrentUserInfo(this.config);
-            this.loginInfo = userInfoResponse.data;
-          } catch (e) {
-            console.log(e);
-          }
-        }
+        response = await login(this.email, this.password);
       } catch (e) {
         alert(JSON.stringify(e.response.data));
         this.logout();
       }
+      this.token = response.data.key;
+      localStorage.token = this.token;
+      this.config.headers.Authorization = "token " + this.token;
+      this._load();
       this.resetLoginForm();
     },
 
-    preview2() {
-      // const original = 0;
-
-      // const copy = readonly(original);
-      // copy++; // warning!
-      // console.log(this.constantValue);
-      // this.constantValue = "abv";
-      // console.log(this.constantValue);
-      // this.copy = "ac";
-      this.copy++;
-      console.log(this.copy);
-    },
+    preview() {},
 
     resetLoginForm() {
       this.$refs.loginForm.reset();
@@ -497,6 +467,7 @@ export default {
 
     async _load() {
       this.loginInfo = (await getCurrentUserInfo(this.config)).data;
+      this.loggedIn = true;
       const responses = await Promise.all([
         getChoices(this.config),
         getEntries(this.config),
@@ -511,7 +482,7 @@ export default {
     },
 
     submitFile(id) {
-      var formdata = new FormData();
+      const formdata = new FormData();
       formdata.append("file", this.file.value);
       formdata.append("id", id);
       this.postFile(formdata)
@@ -531,13 +502,8 @@ export default {
   created: function () {
     console.log("Hello!");
     this.token = localStorage.token;
-    if (this.token == null) {
-      this.loggedIn = false;
-    } else {
-      this.loggedIn = true;
-      this.config["headers"]["Authorization"] = "token " + this.token;
-      this._load();
-    }
+    this.config["headers"]["Authorization"] = "token " + this.token;
+    this._load();
   },
 
   mounted: function () {},

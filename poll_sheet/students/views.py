@@ -178,20 +178,27 @@ class user(APIView):
         print(request.user)
         # print(request.META)
 
-        return Response(
-            {
-                "id": request.user.id,
-                "username": request.user.username,
-                "email": request.user.email,
-                "group": request.user.student.group_id.id,
-            }
-        )
+        print(request.user.user_permissions.all())
+
+        response = {
+            "id": request.user.id,
+            "username": request.user.username,
+        }
+
+        if hasattr(request.user, "email"):
+            response["email"] = request.user.email
+
+        if hasattr(request.user, "student"):
+            response["group"] = request.user.student.group_id.id
+
+        if request.user.is_staff:
+            response["status"] = "staff"
+
+        return Response(response)
 
 
 class Output(APIView):
-    # permission_classes = [
-    #     permissions.IsAuthenticated,
-    # ]
+    permission_classes = (IsStaff,)
 
     def get(self, request):
         # "format" is a reserved Django Rest Framework keyword
