@@ -1,37 +1,28 @@
-// appfront/src/api/api.js
 import axiosInstance from './index'
 
 const axios = axiosInstance
 
-export const getBooks = () => { return axios.get(`http://localhost:8000/api/books/`) }
+export const getStudents = (config) => { return axios.get(`http://127.0.0.1:8000/api/student/`, config) }
 
-export const postBook = (bookName, bookAuthor) => { return axios.post(`http://localhost:8000/api/books/`, { 'name': bookName, 'author': bookAuthor }) }
+export const putFile = (data, id, config) => { return axios.put(`http://127.0.0.1:8000/api/file/${id}/`, data, config) }
 
-export const getStudents = () => { return axios.get(`http://127.0.0.1:8000/api/student/`) }
+export const postFile = (data, config) => { return axios.post(`http://127.0.0.1:8000/api/file/`, data, config) }
 
-export const postTask = () => {
-    return axios.put(`http://localhost:8000/api/tasks/`, {
-        "id": 6,
-        "title": "otto",
-        "description": "world no.1 mid",
-    })
-}
+export const getFile = (id, config) => { return axios.get(`http://127.0.0.1:8000/api/file/${id}/`, config) }
 
-// export const postStudents = (name, netID, groupID, id) => { return axios.post(`http://127.0.0.1:8000/api/student/`), { 'name': name, 'net_id': netID, 'group_id': groupID, 'id': id } }
+export const login = (id, pswd) => { return axios.post(`http://127.0.0.1:8000/api/v1/dj-rest-auth/login/`, { 'email': id, 'password': pswd }) }
 
-export const postStudents = () => {
-    return axios.post(`http://127.0.0.1:8000/api/student/`, {
-        'id': 15,
-        'name': "ll",
-        'net_id': "lw",
-        'group_id': 1
-    })
-}
+export const getEntries = (config) => { return axios.get(`http://127.0.0.1:8000/api/readonly-entry/`, config) }
 
-export const putGroupScore = (id, score) => { return axios.put(`http://127.0.0.1:8000/api/group/${id}/`, { 'id': id, 'score': score }) }
+export const getAdminEntries = (config) => { return axios.get(`http://127.0.0.1:8000/api/entry/`, config) }
 
-export const putFile = (data, id) => { return axios.put(`http://127.0.0.1:8000/api/file/${id}/`, data) }
+export const getChoices = (config) => { return axios.get(`http://127.0.0.1:8000/api/choice/`, config) }
 
-export const postFile = (data) => { return axios.post(`http://127.0.0.1:8000/api/file/`, data) }
+export const postVote = (data, config) => { return axios.post(`http://127.0.0.1:8000/api/vote/`, data, config) }
 
-export const getFile = (id) => { return axios.get(`http://127.0.0.1:8000/api/file/${id}/`) }
+// when not logged in as admin, this api only returns your votes
+export const getVote = (config) => { return axios.get(`http://127.0.0.1:8000/api/vote/`, config) }
+
+export const deleteVote = (pk, config) => { return axios.delete(`http://127.0.0.1:8000/api/vote/${pk}/`, config) }
+
+export const getCurrentUserInfo = (config) => { return axios.get(`http://127.0.0.1:8000/api/user/`, config) }
