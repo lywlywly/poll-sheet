@@ -1,0 +1,12 @@
+rating scale questions:
+  scale: 5
+  items:
+    - name: Content
+      weight: 5
+    - name: Delivery
+      weight: 3
+    - name: Engagement
+      weight: 1
+text questions:
+  items:
+    - Any other words

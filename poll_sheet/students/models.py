@@ -29,6 +29,7 @@ class Entry(models.Model):
     group_id = models.ForeignKey(Group, on_delete=models.CASCADE)
     text = models.TextField(blank=True, null=True)
     type = models.TextField(blank=True, null=True)
+    weight = models.IntegerField(blank=True, null=True)
 
     @property
     def aggregated(self):

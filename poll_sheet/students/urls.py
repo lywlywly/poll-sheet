@@ -20,4 +20,5 @@ urlpatterns = [
     path("multiple_upload/", views.multiple_upload),
     path("output/", views.Output.as_view(), name="status"),
     path("group_introduction/", views.GroupText.as_view(), name="group_introduction"),
+    path("weighted_result/", views.WeightedResult.as_view(), name="weighted_result"),
 ]

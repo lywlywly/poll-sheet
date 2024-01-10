@@ -228,7 +228,9 @@ export default {
       alert("Please refresh to update the latest group introduction text.");
     };
 
-    const md2Html = (md) => marked(md);
+    const md2Html = (md) => {
+      if (md != null) return marked(md);
+    };
 
     const uploadFile = (event) => {
       file.value = event.target.files[0];

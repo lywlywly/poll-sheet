@@ -1,3 +1,4 @@
+from functools import reduce
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from .models import Group, Student, FileModel, ImageModel, Entry, Choice, Vote
@@ -222,6 +223,46 @@ class GroupText(APIView):
         response_json = {"text": g.text}
 
         return Response(response_json)
+
+
+class WeightedResult(APIView):
+    permission_classes = (IsStaff,)
+
+    def get(self, request):
+        entries = EntrySerializer(Entry.objects.all(), many=True).data
+        print(entries)
+        grouped_entries = reduce(
+            lambda acc, entry: acc.update(
+                {entry["group_id"]: acc.get(entry["group_id"], []) + [entry]}
+            )
+            # FIXME:python lambda must be expression, ugly solution here
+            or acc,
+            entries,
+            {},
+        )
+
+        def aggregate_weighted(entries):
+            r = reduce(
+                lambda acc, curr: acc
+                + (
+                    curr["aggregated"] * curr["weight"]
+                    if curr["type"] == "choices_num" and curr["aggregated"] != "NaN"
+                    else 0
+                ),
+                entries,
+                0.0,
+            )
+            total_weights = reduce(
+                lambda acc, curr: acc
+                + (curr["weight"] if curr["type"] == "choices_num" else 0),
+                entries,
+                0.0,
+            )
+            return r / total_weights
+
+        weighted_result = [aggregate_weighted(i[1]) for i in grouped_entries.items()]
+
+        return Response(weighted_result)
 
 
 class Output(APIView):
