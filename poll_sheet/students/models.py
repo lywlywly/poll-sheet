@@ -8,6 +8,7 @@ from django.db.models import Q
 
 class Group(models.Model):
     id = models.IntegerField(primary_key=True)
+    text = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return "id:" + str(self.id)

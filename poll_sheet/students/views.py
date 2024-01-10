@@ -199,6 +199,31 @@ class user(APIView):
         return Response(response)
 
 
+class GroupText(APIView):
+    def post(self, request):
+        request_data = request.data
+        # request.data is by default string
+        group_id = int(request_data.get("group_id"))
+        if request.user.student.group_id.id != group_id:
+            return HttpResponse("Not in the group", status=403)
+        text = request_data.get("text")
+
+        g = Group.objects.get(id=group_id)
+        g.text = text
+        g.save()
+
+        return Response("success")
+
+    def get(self, request):
+        group_id = request.query_params.get("group_id")
+
+        g = Group.objects.get(id=group_id)
+
+        response_json = {"text": g.text}
+
+        return Response(response_json)
+
+
 class Output(APIView):
     permission_classes = (IsStaff,)
 

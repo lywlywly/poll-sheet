@@ -1,3 +1,4 @@
+.mode column
 SELECT
     A.id,
     A.content,

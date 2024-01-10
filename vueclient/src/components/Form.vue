@@ -98,6 +98,25 @@
           </tr>
         </table>
 
+        <EditDialog
+          :dialogVisible="dialogVisible"
+          @confirmDialog="setGroupText($event, key)"
+          @cancelDialog="dialogVisible = false"
+        ></EditDialog>
+
+        <h3>Group introduction</h3>
+
+        <div v-html="md2Html(groupTexts[key - 1])" class="group_text"></div>
+
+        <el-button
+          text
+          @click="dialogVisible = true"
+          v-if="loginInfo.group == key"
+        >
+          Edit Introduction
+        </el-button>
+
+        <!-- TODO -->
         <!-- <div class="files">
           <input type="file" @change="uploadFile" /><br />
           <button @click="submitFile(key)">Submit</button>
@@ -163,10 +182,17 @@ import {
   getCurrentUserInfo,
   getVote,
   deleteVote,
+  getGroups,
+  postGroupText,
 } from "../api/api.js";
 import * as constants from "../api/consts.js";
 import { ref, computed, readonly, reactive } from "vue";
+import EditDialog from "./EditDialog.vue";
+import { marked } from "marked";
 export default {
+  components: {
+    EditDialog,
+  },
   setup: function () {
     // constants
     const CHOICE_NUM = readonly(ref(constants.CHOICE_NUM));
@@ -188,9 +214,21 @@ export default {
       "about:blank",
     ]);
     const students = ref([]);
+    const groupTexts = ref([]);
     const entries = ref([]);
     const choices = ref([]);
     const updatedGroupedEntries = ref({});
+    const dialogVisible = ref(false);
+
+    const setGroupText = async (text, groupId) => {
+      console.log(text);
+      console.log(groupId);
+      dialogVisible.value = false;
+      await postGroupText({ group_id: groupId, text: text }, config.value);
+      alert("Please refresh to update the latest group introduction text.");
+    };
+
+    const md2Html = (md) => marked(md);
 
     const uploadFile = (event) => {
       file.value = event.target.files[0];
@@ -229,6 +267,14 @@ export default {
         });
       }
     }
+
+    const loadGroupTexts = async () => {
+      const response = await getGroups();
+
+      groupTexts.value = response.data.map((e) => e.text);
+
+      console.log(response.data.map((e) => e.text));
+    };
 
     // window.onpossiblyunhandledexception = function () {
     //   window.onerror.apply(this, arguments); // call
@@ -357,7 +403,7 @@ export default {
           ...acc,
           [group_id]: [
             ...(acc[group_id] || []),
-            { entry, type, group_id, choice, content },
+            { entry, type, choice, content },
           ],
         };
       }, Object.create(null));
@@ -396,6 +442,7 @@ export default {
       links,
       groupedStudents,
       students,
+      groupTexts,
       entries,
       groupedEntires,
       choices,
@@ -409,12 +456,16 @@ export default {
       CHOICE_NUM,
       TEXT,
       ORDER,
+      dialogVisible,
+      setGroupText,
+      md2Html,
       loadMyVote,
       uploadFile,
       submitFile,
       loadlinks,
       postVotes,
       isMatchingChoice,
+      loadGroupTexts,
     };
   },
 
@@ -439,7 +490,8 @@ export default {
     },
 
     preview() {
-      console.log(this.postVotePayload);
+      this.loadGroupTexts();
+      // console.log(this.postVotePayload);
     },
 
     resetLoginForm() {
@@ -462,6 +514,7 @@ export default {
         getChoices(this.config),
         getEntries(this.config),
         getStudents(this.config),
+        this.loadGroupTexts(),
       ]);
       this.choices = responses[0].data;
       this.entries = responses[1].data;
@@ -493,6 +546,7 @@ export default {
     console.log("Hello!");
     this.token = localStorage.token;
     this.config["headers"]["Authorization"] = "token " + this.token;
+    // console.log(this.token)
     this._load();
   },
 
@@ -637,6 +691,10 @@ ul {
   resize: none;
   width: 350px;
   height: 100px;
+}
+
+.group_text {
+  background-color: #f0f8ff;
 }
 
 /* li {} */

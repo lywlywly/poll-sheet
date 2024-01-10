@@ -19,4 +19,5 @@ urlpatterns = [
     path("single_upload/", views.single_upload),
     path("multiple_upload/", views.multiple_upload),
     path("output/", views.Output.as_view(), name="status"),
+    path("group_introduction/", views.GroupText.as_view(), name="group_introduction"),
 ]
