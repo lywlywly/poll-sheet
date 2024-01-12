@@ -16,6 +16,8 @@ class StudentSerializer(serializers.ModelSerializer):
 
 
 class EntryReadOnlySerializer(serializers.ModelSerializer):
+    group_index = serializers.ReadOnlyField()
+
     class Meta:
         model = Entry
         fields = "__all__"
@@ -23,6 +25,7 @@ class EntryReadOnlySerializer(serializers.ModelSerializer):
 
 class EntrySerializer(serializers.ModelSerializer):
     aggregated = serializers.ReadOnlyField()
+
     class Meta:
         model = Entry
         fields = "__all__"

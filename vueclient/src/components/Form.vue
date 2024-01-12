@@ -194,7 +194,10 @@ export default {
   components: {
     EditDialog,
   },
-  setup: function () {
+  props: {
+    poll_id: Number,
+  },
+  setup: function (props) {
     // constants
     const CHOICE_NUM = readonly(ref(constants.CHOICE_NUM));
     const TEXT = readonly(ref(constants.TEXT));
@@ -225,7 +228,10 @@ export default {
       console.log(text);
       console.log(groupId);
       dialogVisible.value = false;
-      await postGroupText({ group_id: groupId, text: text }, config.value);
+      await postGroupText(
+        { group_index: groupId, poll_id: props.poll_id, text: text },
+        config.value
+      );
       alert("Please refresh to update the latest group introduction text.");
     };
 
@@ -272,7 +278,7 @@ export default {
     }
 
     const loadGroupTexts = async () => {
-      const response = await getGroups();
+      const response = await getGroups(props.poll_id);
 
       groupTexts.value = response.data.map((e) => e.text);
 
@@ -288,7 +294,7 @@ export default {
     // }
 
     const loadMyVote = async () => {
-      const response = await getVote(config.value);
+      const response = await getVote(props.poll_id, config.value);
       myCurrentVote.value = response.data;
     };
 
@@ -311,7 +317,7 @@ export default {
         const choiceId = choices.value.find(
           isMatchingChoice(entryId, choiceText)
         ).id;
-        return { entry: entryId, choice: choiceId };
+        return { entry: entryId, choice: choiceId, poll_id: props.poll_id };
       };
 
       const processTextEntry = (entry) => {
@@ -320,7 +326,12 @@ export default {
         const choiceId = choices.value.find(
           isMatchingChoice(entryId, "Enter your words")
         ).id;
-        return { entry: entryId, choice: choiceId, content: content };
+        return {
+          entry: entryId,
+          choice: choiceId,
+          content: content,
+          poll_id: props.poll_id,
+        };
       };
 
       const post = Object.values(updatedGroupedEntries.value)
@@ -337,12 +348,12 @@ export default {
       return post;
     });
 
-    // { "1": [ { "id": 7, "name": "student7", "net_id": "007", "user": 7, "group_id": 1 }, { "id": 8, "name": "student8", "net_id": "008", "user": 8, "group_id": 1 } ], ... }
+    // { "1": [ { "id": 7, "name": "student7", "net_id": "007", "user": 7, "group_index": 1 }, { "id": 8, "name": "student8", "net_id": "008", "user": 8, "group_index": 1 } ], ... }
     const groupedStudents = computed(() => {
       //https://stackoverflow.com/questions/40774697/how-can-i-group-an-array-of-objects-by-key
       const result = students.value.reduce((r, a) => {
-        r[a.group_id] = r[a.group_id] || [];
-        r[a.group_id].push(a);
+        r[a.group_index] = r[a.group_index] || [];
+        r[a.group_index].push(a);
         return r;
       }, Object.create(null));
       return result;
@@ -350,11 +361,11 @@ export default {
 
     const groupedEntires = computed(() => {
       const result = entries.value.reduce(function (r, a) {
-        r[a.group_id] = r[a.group_id] || [];
-        r[a.group_id].push({
+        r[a.group_index] = r[a.group_index] || [];
+        r[a.group_index].push({
           id: a["id"],
           text: a["text"],
-          group_id: a["group_id"],
+          group_index: a["group_index"],
           score: 0,
           type: a["type"],
           content: "enter your comments here",
@@ -384,8 +395,9 @@ export default {
     const groupedMyCurrentVotes = computed(() => {
       if (!loggedIn.value) return {};
       const result_0 = myCurrentVote.value.map((m) => ({
-        group_id: entries.value.find((e) => e.id == entryIdByChoiceId(m.choice))
-          .group_id,
+        group_index: entries.value.find(
+          (e) => e.id == entryIdByChoiceId(m.choice)
+        ).group_index,
         entry: entries.value.find((e) => e.id == entryIdByChoiceId(m.choice))
           .text,
         type: entries.value.find((e) => e.id == entryIdByChoiceId(m.choice))
@@ -394,18 +406,12 @@ export default {
         choice: choices.value.find((e) => e.id == m.choice).choice_text,
         content: m.content,
       }));
-      // const result = result_0.reduce((r, a) => {
-      //   const { group_id, entry, type, choice, content } = a;
-      //   r[group_id] = r[group_id] || [];
-      //   r[group_id].push({ entry, type, group_id, choice, content });
-      //   return r;
-      // }, Object.create(null));
       const result = result_0.reduce((acc, curr) => {
-        const { group_id, entry, type, choice, content } = curr;
+        const { group_index, entry, type, choice, content } = curr;
         return {
           ...acc,
-          [group_id]: [
-            ...(acc[group_id] || []),
+          [group_index]: [
+            ...(acc[group_index] || []),
             { entry, type, choice, content },
           ],
         };
@@ -511,11 +517,13 @@ export default {
     },
 
     async _load() {
-      this.loginInfo = (await getCurrentUserInfo(this.config)).data;
+      this.loginInfo = (
+        await getCurrentUserInfo(this.poll_id, this.config)
+      ).data;
       this.loggedIn = true;
       const responses = await Promise.all([
         getChoices(this.config),
-        getEntries(this.config),
+        getEntries(this.config, this.poll_id),
         getStudents(this.config),
         this.loadGroupTexts(),
       ]);
@@ -523,6 +531,7 @@ export default {
       this.entries = responses[1].data;
       this.students = responses[2].data;
       this.updatedGroupedEntries = this.groupedEntires;
+      console.log(this.groupedEntires);
       // this.loadlinks()
       this.loadMyVote();
     },

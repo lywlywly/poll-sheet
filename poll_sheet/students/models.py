@@ -6,12 +6,12 @@ from accounts.models import CustomUser
 from django.db.models import Q
 
 
-class Group(models.Model):
-    id = models.IntegerField(primary_key=True)
-    text = models.TextField(blank=True, null=True)
+class Poll(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return "id:" + str(self.id)
+        return str(self.name)
 
 
 class Student(models.Model):
@@ -19,10 +19,20 @@ class Student(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     net_id = models.TextField(blank=True, null=True)
-    group_id = models.ForeignKey(Group, on_delete=models.CASCADE)
+    # group_id = models.ForeignKey(Group, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.net_id
+
+
+class Group(models.Model):
+    index = models.IntegerField(blank=True, null=True)
+    text = models.TextField(blank=True, null=True)
+    poll_id = models.ForeignKey(Poll, on_delete=models.CASCADE)
+    students = models.ManyToManyField(Student)
+
+    def __str__(self):
+        return "id:" + str(self.id)
 
 
 class Entry(models.Model):
@@ -40,6 +50,10 @@ class Entry(models.Model):
         elif self.type == "text":
             li = list(map(lambda x: x.content, filtered_votes))
             return li
+
+    @property
+    def group_index(self):
+        return self.group_id.index
 
     def __str__(self):
         return str(self.group_id.id) + self.text

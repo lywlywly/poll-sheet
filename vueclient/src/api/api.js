@@ -25,8 +25,11 @@ export const login = (id, pswd) => {
   });
 };
 
-export const getEntries = (config) => {
-  return axios.get(`http://127.0.0.1:8000/api/readonly-entry/`, config);
+export const getEntries = (config, pollID) => {
+  return axios.get(
+    `http://127.0.0.1:8000/api/readonly-entry/?poll_id=${pollID}`,
+    config
+  );
 };
 
 export const getAdminEntries = (config) => {
@@ -42,20 +45,20 @@ export const postVote = (data, config) => {
 };
 
 // when not logged in as admin, this api only returns your votes
-export const getVote = (config) => {
-  return axios.get(`http://127.0.0.1:8000/api/vote/`, config);
+export const getVote = (pollID, config) => {
+  return axios.get(`http://127.0.0.1:8000/api/vote/?poll_id=${pollID}`, config);
 };
 
 export const deleteVote = (pk, config) => {
   return axios.delete(`http://127.0.0.1:8000/api/vote/${pk}/`, config);
 };
 
-export const getCurrentUserInfo = (config) => {
-  return axios.get(`http://127.0.0.1:8000/api/user/`, config);
+export const getCurrentUserInfo = (pollID, config) => {
+  return axios.get(`http://127.0.0.1:8000/api/user/?poll_id=${pollID}`, config);
 };
 
-export const getGroups = () => {
-  return axios.get(`http://127.0.0.1:8000/api/group/`);
+export const getGroups = (pollID) => {
+  return axios.get(`http://127.0.0.1:8000/api/group/?poll_id=${pollID}`);
 };
 
 export const getGroupText = (id) => {

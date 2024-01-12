@@ -1,7 +1,7 @@
 from functools import reduce
 from django.shortcuts import render
 from rest_framework import viewsets, status
-from .models import Group, Student, FileModel, ImageModel, Entry, Choice, Vote
+from .models import Group, Student, FileModel, ImageModel, Entry, Choice, Vote, Poll
 from rest_framework.views import APIView
 from .permissions import IsStaff, IsVoter, IsAuthorOrReadOnly
 from .serializers import (
@@ -36,6 +36,15 @@ class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Apply filters based on query parameters
+        filter_param = self.request.query_params.get("poll_id")
+        print(filter_param)
+        if filter_param:
+            queryset = queryset.filter(poll_id=filter_param)
+        return queryset
+
 
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
@@ -45,6 +54,15 @@ class StudentViewSet(viewsets.ModelViewSet):
 class EntryReadOnlyViewSet(viewsets.ModelViewSet):
     queryset = Entry.objects.all()
     serializer_class = EntryReadOnlySerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Apply filters based on query parameters
+        filter_param = self.request.query_params.get("poll_id")
+        print(filter_param)
+        if filter_param:
+            queryset = queryset.filter(group_id__poll_id=filter_param)
+        return queryset
 
 
 class EntryViewSet(viewsets.ModelViewSet):
@@ -59,18 +77,33 @@ class ChoiceViewSet(viewsets.ModelViewSet):
     serializer_class = ChoiceSerializer
 
 
+def get_student_group(student_id, poll_id):
+    try:
+        group = Group.objects.filter(poll_id=poll_id, students__id=student_id).first()
+        if group:
+            return group
+    except Group.DoesNotExist:
+        pass
+
+    return None
+
+
 class VoteViewSet(viewsets.ModelViewSet):
     permission_classes = (IsVoter,)
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer
 
     def list(self, request):
-        print(request.META.get("REMOTE_ADDR"))
+        filter_param = self.request.query_params.get("poll_id")
         if request.user.is_staff:
             queryset_all = Vote.objects.all()
             serializer_all = VoteSerializer(queryset_all, many=True)
             return Response(serializer_all.data)
-        queryset = Vote.objects.all().filter(voter_id=request.user.student.id)
+        queryset = (
+            Vote.objects.all()
+            .filter(voter_id=request.user.student.id)
+            .filter(choice__poll__group_id__poll_id=filter_param)
+        )
         serializer = VoteSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -81,6 +114,7 @@ class VoteViewSet(viewsets.ModelViewSet):
         request_data["voter"] = (
             request.user.student.id if request.user.is_authenticated else None
         )
+        poll_id = request_data["poll_id"]
         choice_id = int(request.data["choice"])
         choice = Choice.objects.get(id=choice_id)
         poll = Entry.objects.get(id=choice.poll.id)
@@ -93,8 +127,8 @@ class VoteViewSet(viewsets.ModelViewSet):
             )
 
         if (
-            request.user.student.group_id_id
-            == Entry.objects.get(pk=choice.poll.id).group_id_id
+            get_student_group(request.user.student.id, poll_id).index
+            == Entry.objects.get(pk=choice.poll.id).group_id.index
         ):
             return Response(
                 "You cannot vote for the same group as you",
@@ -180,7 +214,7 @@ class user(APIView):
     def get(self, request):
         print(request.user)
         # print(request.META)
-
+        poll_id = request.query_params.get("poll_id")
         print(request.user.user_permissions.all())
 
         response = {
@@ -192,7 +226,9 @@ class user(APIView):
             response["email"] = request.user.email
 
         if hasattr(request.user, "student"):
-            response["group"] = request.user.student.group_id.id
+            response["group"] = get_student_group(
+                request.user.student.id, poll_id
+            ).index
 
         if request.user.is_staff:
             response["status"] = "staff"
@@ -204,12 +240,13 @@ class GroupText(APIView):
     def post(self, request):
         request_data = request.data
         # request.data is by default string
-        group_id = int(request_data.get("group_id"))
-        if request.user.student.group_id.id != group_id:
+        group_index = int(request_data.get("group_index"))
+        poll_id = int(request_data.get("poll_id"))
+        if get_student_group(request.user.student.id, poll_id).index != group_index:
             return HttpResponse("Not in the group", status=403)
         text = request_data.get("text")
 
-        g = Group.objects.get(id=group_id)
+        g = Group.objects.get(index=group_index, poll_id=poll_id)
         g.text = text
         g.save()
 

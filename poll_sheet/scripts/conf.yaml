@@ -1,3 +1,32 @@
+# forms:
+#   - name: bk1-proposal
+#     rating scale questions:
+#       scale: 5
+#       items:
+#         - name: Content
+#           weight: 5
+#         - name: Delivery
+#           weight: 3
+#         - name: Engagement
+#           weight: 1
+#     text questions:
+#       items:
+#         - Any other words
+#   - name: bk1-pre
+#     rating scale questions:
+#       scale: 5
+#       items:
+#         - name: Content
+#           weight: 5
+#         - name: Delivery
+#           weight: 3
+#         - name: Engagement
+#           weight: 1
+#     text questions:
+#       items:
+#         - Any other words
+
+name: bk1-proposal
 rating scale questions:
   scale: 5
   items:
@@ -10,3 +39,17 @@ rating scale questions:
 text questions:
   items:
     - Any other words
+
+# name: bk1-pre
+# rating scale questions:
+#   scale: 5
+#   items:
+#     - name: OTTO
+#       weight: 5
+#     - name: SHUNFEI
+#       weight: 3
+#     - name: Engagement
+#       weight: 1
+# text questions:
+#   items:
+#     - Last Dance
