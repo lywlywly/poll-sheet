@@ -100,6 +100,7 @@
 
         <EditDialog
           :dialogVisible="dialogVisible"
+          :original-text="groupTexts[key - 1]"
           @confirmDialog="setGroupText($event, key)"
           @cancelDialog="dialogVisible = false"
         ></EditDialog>

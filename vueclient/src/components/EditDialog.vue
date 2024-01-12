@@ -24,6 +24,10 @@ export default {
       type: Boolean,
       required: true,
     },
+    originalText: {
+      type: String,
+      required: true,
+    },
     // key: {
     //   type: String,
     //   required: true,
@@ -31,7 +35,7 @@ export default {
   },
   data() {
     return {
-      text: "",
+      text: this.originalText,
     };
   },
   methods: {
