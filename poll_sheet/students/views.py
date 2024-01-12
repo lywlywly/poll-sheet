@@ -1,4 +1,5 @@
 from functools import reduce
+from django.forms import ValidationError
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from .models import Group, Student, FileModel, ImageModel, Entry, Choice, Vote, Poll
@@ -32,18 +33,39 @@ from rest_framework import permissions
 #     return HttpResponse("Hello, world. You're at the polls index.")
 
 
+def find_elements_not_in_list(all_items, my_items):
+    elements_not_in_my_items = [
+        element for element in all_items if element not in my_items
+    ]
+    return len(elements_not_in_my_items) > 0
+
+
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Apply filters based on query parameters
-        filter_param = self.request.query_params.get("poll_id")
-        print(filter_param)
+        query_params = self.request.query_params
+        if find_elements_not_in_list(query_params, ["poll_id"]):
+            raise ValidationError("unknown query parameters")
+        filter_param = query_params.get("poll_id")
         if filter_param:
             queryset = queryset.filter(poll_id=filter_param)
         return queryset
+
+    # def list(self, request):
+    #     query_params = request.query_params
+    #     if find_elements_not_in_list(query_params, ["poll_id"]):
+    #         return Response(
+    #             "Unknown query parameters", status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+    #     filter_param = query_params.get("poll_id")
+    #     if filter_param:
+    #         queryset = self.queryset.filter(poll_id=filter_param)
+
+    #     return Response(GroupSerializer(queryset, many=True).data)
 
 
 class StudentViewSet(viewsets.ModelViewSet):
@@ -57,7 +79,6 @@ class EntryReadOnlyViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Apply filters based on query parameters
         filter_param = self.request.query_params.get("poll_id")
         print(filter_param)
         if filter_param:
@@ -75,6 +96,13 @@ class EntryViewSet(viewsets.ModelViewSet):
 class ChoiceViewSet(viewsets.ModelViewSet):
     queryset = Choice.objects.all()
     serializer_class = ChoiceSerializer
+
+
+class StudentGroup(APIView):
+    def get(self, request):
+        filter_param = request.query_params.get("poll_id")
+        student_id = request.query_params.get("student_id")
+        return get_student_group(student_id, filter_param)
 
 
 def get_student_group(student_id, poll_id):

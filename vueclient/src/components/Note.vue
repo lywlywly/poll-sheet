@@ -39,14 +39,14 @@ export default {
     /* margin-top: 60px; */
 }
 
-.grid-container {
+/* .grid-container {
     display: grid;
     grid-template-columns: auto auto;
     grid-template-rows: auto;
     gap: 10px;
     background-color: #2196F3;
     padding: 10px;
-}
+} */
 
 .grid-container>div {
     background-color: rgba(255, 255, 255, 0.8);

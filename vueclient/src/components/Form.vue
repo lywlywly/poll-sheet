@@ -56,115 +56,123 @@
     </form>
   </div>
 
-  <h2>Your vote</h2>
-  <h3 v-if="Object.keys(groupedMyCurrentVotes).length == 0">
-    You haven't voted yet.
-  </h3>
-  <ul class="mypost">
-    <li v-for="(votes, key, _) in groupedMyCurrentVotes" :key="key">
-      Group
-      <div class="inline-bold">{{ key }}</div>
-      <ul>
-        <li v-for="(vote, _) in votes" :key="key">
-          {{ vote.entry }}:
-          <div v-if="vote.type === CHOICE_NUM" class="inline-bold">
-            {{ vote.choice }}
-          </div>
-          <div v-if="vote.type === TEXT" class="inline-bold">
-            {{ vote.content }}
-          </div>
+  <div class="container">
+    <div class="left">
+      <h2>Your vote</h2>
+      <h3 v-if="Object.keys(groupedMyCurrentVotes).length == 0">
+        You haven't voted yet.
+      </h3>
+      <ul class="mypost">
+        <li v-for="(votes, key, _) in groupedMyCurrentVotes" :key="key">
+          Group
+          <div class="inline-bold">{{ key }}</div>
+          <ul>
+            <li v-for="(vote, _) in votes" :key="key">
+              {{ vote.entry }}:
+              <div v-if="vote.type === CHOICE_NUM" class="inline-bold">
+                {{ vote.choice }}
+              </div>
+              <div v-if="vote.type === TEXT" class="inline-bold">
+                {{ vote.content }}
+              </div>
+            </li>
+          </ul>
         </li>
       </ul>
-    </li>
-  </ul>
+    </div>
+    <div class="right">
+      <h3 v-if="!loggedIn" class="center-text">Sign in to vote</h3>
+      <div class="content">
+        <el-tabs v-model="activeName0" class="demo-tabs" tabPosition="left">
+          <el-tab-pane
+            v-for="(entries, key, index0) in groupedEntires"
+            :key="index0"
+            :label="'Group ' + key"
+            :name="index0"
+          >
+            <table class="group">
+              <tr>
+                <th>Name</th>
+                <th>NetId</th>
+              </tr>
+              <tr v-for="(student, index) in groupedStudents[key]" :key="index">
+                <td>{{ student.name }}</td>
+                <td>{{ student.net_id }}</td>
+              </tr>
+            </table>
 
-  <h3 v-if="!loggedIn" class="center-text">Sign in to vote</h3>
-  <div class="content">
-    <el-tabs v-model="activeName0" class="demo-tabs" tabPosition="left">
-      <el-tab-pane
-        v-for="(entries, key, index0) in groupedEntires"
-        :key="index0"
-        :label="'Group ' + key"
-        :name="index0"
-      >
-        <table class="group">
-          <tr>
-            <th>Name</th>
-            <th>NetId</th>
-          </tr>
-          <tr v-for="(student, index) in groupedStudents[key]" :key="index">
-            <td>{{ student.name }}</td>
-            <td>{{ student.net_id }}</td>
-          </tr>
-        </table>
+            <EditDialog
+              :dialogVisible="dialogVisible"
+              :original-text="groupTexts[key - 1]"
+              @confirmDialog="setGroupText($event, key)"
+              @cancelDialog="dialogVisible = false"
+            ></EditDialog>
 
-        <EditDialog
-          :dialogVisible="dialogVisible"
-          :original-text="groupTexts[key - 1]"
-          @confirmDialog="setGroupText($event, key)"
-          @cancelDialog="dialogVisible = false"
-        ></EditDialog>
+            <h3>Group introduction</h3>
 
-        <h3>Group introduction</h3>
+            <div v-html="md2Html(groupTexts[key - 1])" class="group_text"></div>
 
-        <div v-html="md2Html(groupTexts[key - 1])" class="group_text"></div>
+            <el-button
+              text
+              @click="dialogVisible = true"
+              v-if="loginInfo.group == key"
+            >
+              Edit Introduction
+            </el-button>
 
-        <el-button
-          text
-          @click="dialogVisible = true"
-          v-if="loginInfo.group == key"
-        >
-          Edit Introduction
-        </el-button>
-
-        <!-- TODO -->
-        <!-- <div class="files">
+            <!-- TODO -->
+            <!-- <div class="files">
           <input type="file" @change="uploadFile" /><br />
           <button @click="submitFile(key)">Submit</button>
           <a :href="links[index0]">slides</a>
         </div> -->
-        <ul class="post">
-          <li v-for="(entry, index) in entries" :key="key">
-            {{ entry.text }}<br />
-            <div class="entry" v-if="entry.type === CHOICE_NUM">
-              <ul class="ul-score">
-                <li
-                  v-for="(choice, _) in choices.filter(
-                    (c) => c.poll == entry.id
-                  )"
-                  :key="key"
-                  class="li-score"
-                >
-                  <div class="radio-box">
-                    <input
-                      type="radio"
-                      :name="index0.toString() + index.toString()"
-                      :value="choice.choice_text"
-                      v-model="updatedGroupedEntries[index0 + 1][index].score"
-                      id="delivery1"
-                      :disabled="key == loginInfo.group"
-                    />
-                    <label for="TODO">{{ choice.choice_text }}</label>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="entry" v-if="entry.type === TEXT">
-              <textarea
-                class="vote-text"
-                v-model="updatedGroupedEntries[index0 + 1][index].content"
-                :disabled="key == loginInfo.group"
-              ></textarea>
-            </div>
-          </li>
-        </ul>
-      </el-tab-pane>
-    </el-tabs>
+            <ul class="post">
+              <li v-for="(entry, index) in entries" :key="key">
+                {{ entry.text }}<br />
+                <div class="entry" v-if="entry.type === CHOICE_NUM">
+                  <ul class="ul-score">
+                    <li
+                      v-for="(choice, _) in choices.filter(
+                        (c) => c.poll == entry.id
+                      )"
+                      :key="key"
+                      class="li-score"
+                    >
+                      <div class="radio-box">
+                        <input
+                          type="radio"
+                          :name="index0.toString() + index.toString()"
+                          :value="choice.choice_text"
+                          v-model="
+                            updatedGroupedEntries[index0 + 1][index].score
+                          "
+                          id="delivery1"
+                          :disabled="key == loginInfo.group"
+                        />
+                        <label for="TODO">{{ choice.choice_text }}</label>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <div class="entry" v-if="entry.type === TEXT">
+                  <textarea
+                    class="vote-text"
+                    v-model="updatedGroupedEntries[index0 + 1][index].content"
+                    :disabled="key == loginInfo.group"
+                  ></textarea>
+                </div>
+              </li>
+            </ul>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+      <div class="submit-button">
+        <button @click="preview">Preview</button>
+        <button v-if="loggedIn" @click="postVotes">Submit</button>
+      </div>
+    </div>
   </div>
-  <div class="submit-button">
-    <button @click="preview">Preview</button>
-    <button v-if="loggedIn" @click="postVotes">Submit</button>
-  </div>
+
   <footer></footer>
 </template>
 
@@ -219,6 +227,7 @@ export default {
     ]);
     const students = ref([]);
     const groupTexts = ref([]);
+    const groupArray = ref([]);
     const entries = ref([]);
     const choices = ref([]);
     const updatedGroupedEntries = ref({});
@@ -279,7 +288,9 @@ export default {
 
     const loadGroupTexts = async () => {
       const response = await getGroups(props.poll_id);
-
+      let temp = response.data;
+      temp.sort((a, b) => a.index - b.index);
+      groupArray.value = temp.map((obj) => obj.students);
       groupTexts.value = response.data.map((e) => e.text);
 
       console.log(response.data.map((e) => e.text));
@@ -348,12 +359,18 @@ export default {
       return post;
     });
 
+    const getStudentGroup = (studentID) => {
+      return (
+        groupArray.value.findIndex((o) => o.some((id) => id === studentID)) + 1
+      );
+    };
+
     // { "1": [ { "id": 7, "name": "student7", "net_id": "007", "user": 7, "group_index": 1 }, { "id": 8, "name": "student8", "net_id": "008", "user": 8, "group_index": 1 } ], ... }
     const groupedStudents = computed(() => {
       //https://stackoverflow.com/questions/40774697/how-can-i-group-an-array-of-objects-by-key
       const result = students.value.reduce((r, a) => {
-        r[a.group_index] = r[a.group_index] || [];
-        r[a.group_index].push(a);
+        r[getStudentGroup(a.id)] = r[getStudentGroup(a.id)] || [];
+        r[getStudentGroup(a.id)].push(a);
         return r;
       }, Object.create(null));
       return result;
@@ -573,7 +590,21 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 /* min css */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
+.left {
+  margin-left: auto;
+  margin-right: 25px;
+}
+
+.right {
+  margin-right: auto;
+  margin-left: 25px;
+}
 div.login {
   max-width: 300px;
   /* margin: auto; */
