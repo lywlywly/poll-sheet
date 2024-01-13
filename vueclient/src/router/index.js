@@ -17,6 +17,14 @@ export const routes = [
     name: "form",
     component: Form,
     props: {
+      poll_id: 1,
+    },
+  },
+  {
+    path: "/form2",
+    name: "form2",
+    component: Form,
+    props: {
       poll_id: 2,
     },
   },

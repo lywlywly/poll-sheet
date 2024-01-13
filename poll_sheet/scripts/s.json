@@ -1,0 +1,62 @@
+[
+  {
+    "net_id": "netid01",
+    "name": "name01",
+    "password": "temp01"
+  },
+  {
+    "net_id": "netid03",
+    "name": "name03",
+    "password": "temp03"
+  },
+  {
+    "net_id": "netid05",
+    "name": "name05",
+    "password": "temp05"
+  },
+  {
+    "net_id": "netid02",
+    "name": "name02",
+    "password": "temp02"
+  },
+  {
+    "net_id": "netid08",
+    "name": "name08",
+    "password": "temp08"
+  },
+  {
+    "net_id": "netid09",
+    "name": "name09",
+    "password": "temp09"
+  },
+  {
+    "net_id": "netid04",
+    "name": "name04",
+    "password": "temp04"
+  },
+  {
+    "net_id": "netid07",
+    "name": "name07",
+    "password": "temp07"
+  },
+  {
+    "net_id": "netid10",
+    "name": "name10",
+    "password": "temp10"
+  },
+  {
+    "net_id": "netid06",
+    "name": "name06",
+    "password": "temp06"
+  },
+  {
+    "net_id": "netid11",
+    "name": "name11",
+    "password": "temp11"
+  },
+  {
+    "net_id": "netid12",
+    "name": "name12",
+    "password": "temp12"
+  }
+]

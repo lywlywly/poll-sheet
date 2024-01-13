@@ -23,9 +23,10 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
 
 
 class IsVoter(permissions.BasePermission):
-    '''
+    """
     has list permission if authenticated; has retrieval permission if is the voter of the vote
-    '''
+    """
+
     def has_permission(self, request, view):
         if request.user.is_authenticated:
             return True
@@ -34,10 +35,12 @@ class IsVoter(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.voter == request.user.student
 
+
 class IsStaff(permissions.BasePermission):
-    '''
+    """
     has permission only when is staff
-    '''
+    """
+
     def has_permission(self, request, view):
         if request.user.is_staff:
             return True
@@ -47,3 +50,8 @@ class IsStaff(permissions.BasePermission):
         if request.user.is_staff:
             return True
         return False
+
+
+class ReadOnlyPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.method in permissions.SAFE_METHODS

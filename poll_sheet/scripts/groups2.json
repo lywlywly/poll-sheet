@@ -1,22 +1,22 @@
 [
   [
-    "netid01",
+    "netid02",
     "netid03",
     "netid05"
   ],
   [
-    "netid02",
+    "netid01",
     "netid08",
     "netid09"
   ],
   [
-    "netid04",
-    "netid07",
+    "netid06",
+    "netid11",
     "netid10"
   ],
   [
-    "netid06",
-    "netid11",
+    "netid04",
+    "netid07",
     "netid12"
   ]
 ]

@@ -1,52 +1,42 @@
+import sys, os, django
+
+sys.path.append("../")  # here store is root folder(means parent).
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "poll_sheet.settings")
+django.setup()
+
 import yaml
 import json
 
 from django.contrib.auth import get_user_model
 from students.models import Group, Entry, Student, Choice, Poll
 
-with open("conf.yaml", "r") as f:
-    document = f.read()
-
-with open("groups.json", "r") as f:
-    roaster = f.read()
-
-config = yaml.safe_load(document)
-roaster = json.loads(roaster)
-
-scale = config["rating scale questions"]["scale"]
-group_cnt = len(roaster)
-flattened_list = [item for sublist in roaster for item in sublist]
-student_cnt = len(flattened_list)
 User = get_user_model()
 
 
 # populate user
-def populate_users(flattened_list):
-    for e in flattened_list:
+def populate_users(roaster):
+    for e in roaster:
         User.objects.create_user(
             e["name"], "{i}@duke.edu".format(i=e["net_id"]), e["password"]
         )
 
 
 # populate student
-def populate_students(groups):
+def populate_students(roaster):
     users = User.objects.all()
-    for index, group in enumerate(groups):
+    for s in roaster:
         # use `next` because there is a single match (primary key), or none
-        for student in group:
-            s = Student(
-                # id=_,
-                net_id=student["net_id"],
-                user=next(
-                    filter(
-                        lambda x: x.email == "{i}@duke.edu".format(i=student["net_id"]),
-                        users,
-                    )
-                ),
-                name=student["name"],
-                # group_id=gs.get(id=index + 1),
-            )
-            s.save()
+        student = Student(
+            net_id=s["net_id"],
+            user=next(
+                filter(
+                    lambda x: x.email == "{i}@duke.edu".format(i=s["net_id"]),
+                    users,
+                )
+            ),
+            name=s["name"],
+        )
+        student.save()
 
 
 # create a poll
@@ -66,9 +56,9 @@ def populate_groups(group_cnt, p):
 # assign groups
 def assign_groups(groups, p):
     for index, group in enumerate(groups):
-        for student in group:
+        for net_id in group:
             the_group = Group.objects.get(index=index + 1, poll_id=p)
-            the_group.students.add(Student.objects.get(net_id=student["net_id"]))
+            the_group.students.add(Student.objects.get(net_id=net_id))
             the_group.save()
 
 
@@ -83,7 +73,7 @@ def populate_entries(conf, group_cnt, p):
                 group_id=Group.objects.get(index=group_index + 1, poll_id=p),
                 text=e["name"],
                 type="choices_num",
-                weight=e["weight"],
+                weight=e.get("weight", 1),
             ).save()
         for e in conf["text questions"]["items"]:
             Entry(
@@ -104,12 +94,27 @@ def populate_choices(scale, p):
             Choice(poll=e, choice_text="Enter your words").save()
 
 
-def init():
-    populate_users(flattened_list)
+def init(file_path):
+    with open(file_path, "r") as f:
+        roaster = f.read()
+
+    roaster = json.loads(roaster)
+    populate_users(roaster)
     populate_students(roaster)
 
 
-def poll():
+def poll(config_path, group_path):
+    with open(config_path, "r") as f:
+        config = f.read()
+
+    with open(group_path, "r") as f:
+        roaster = f.read()
+
+    config = yaml.safe_load(config)
+    roaster = json.loads(roaster)
+
+    scale = config["rating scale questions"]["scale"]
+    group_cnt = len(roaster)
     p = create_poll(config["name"])
     populate_groups(group_cnt, p)
     assign_groups(roaster, p)
@@ -117,5 +122,23 @@ def poll():
     populate_choices(scale, p)
 
 
-# init()
-poll()
+import argparse
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Script description")
+
+    parser.add_argument(
+        "-i", "--init", type=str, help="Input json file to create users"
+    )
+    parser.add_argument(
+        "-g", "--group", type=str, help="Input json file to create groups"
+    )
+    parser.add_argument("-p", "--poll", type=str, help="Input yaml file to create poll")
+
+    args = parser.parse_args()
+
+    if args.init:
+        init(args.init)
+
+    if args.group and args.poll:
+        poll(args.poll, args.group)

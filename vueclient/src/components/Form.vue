@@ -1,5 +1,6 @@
 <template>
   <h1>Voting Form</h1>
+  <h2>{{ pollName }}</h2>
   <h3 v-if="!loggedIn">You are not logged in</h3>
   <div v-if="loggedIn">
     Name:
@@ -68,9 +69,9 @@
           <div class="inline-bold">{{ key }}</div>
           <ul>
             <li v-for="(vote, _) in votes" :key="key">
-              {{ vote.entry }}:
+              {{ vote.text }}:
               <div v-if="vote.type === CHOICE_NUM" class="inline-bold">
-                {{ vote.choice }}
+                {{ vote.score }}
               </div>
               <div v-if="vote.type === TEXT" class="inline-bold">
                 {{ vote.content }}
@@ -193,6 +194,7 @@ import {
   deleteVote,
   getGroups,
   postGroupText,
+  getPoll,
 } from "../api/api.js";
 import * as constants from "../api/consts.js";
 import { ref, computed, readonly, reactive } from "vue";
@@ -232,6 +234,7 @@ export default {
     const choices = ref([]);
     const updatedGroupedEntries = ref({});
     const dialogVisible = ref(false);
+    const pollName = ref("");
 
     const setGroupText = async (text, groupId) => {
       console.log(text);
@@ -307,6 +310,15 @@ export default {
     const loadMyVote = async () => {
       const response = await getVote(props.poll_id, config.value);
       myCurrentVote.value = response.data;
+      const merged = { ...groupedMyCurrentVotes.value };
+      Object.keys(groupedEntires.value).forEach((key) => {
+        if (!(key in merged)) {
+          merged[key] = groupedEntires.value[key];
+        }
+      });
+      const entries = Object.entries(merged);
+      entries.forEach((e) => e[1].sort((a, b) => a.id - b.id));
+      updatedGroupedEntries.value = Object.fromEntries(entries);
     };
 
     const postVotes = async () => {
@@ -396,11 +408,11 @@ export default {
       const sortedData = Object.fromEntries(
         Object.entries(result).map(([key, entries]) => [
           key,
-          entries.slice().sort(myOrder),
+          entries.slice().sort((a, b) => a.id - b.id),
         ])
       );
 
-      console.log(sortedData);
+      // console.log(sortedData);
       return sortedData;
     });
 
@@ -415,21 +427,21 @@ export default {
         group_index: entries.value.find(
           (e) => e.id == entryIdByChoiceId(m.choice)
         ).group_index,
-        entry: entries.value.find((e) => e.id == entryIdByChoiceId(m.choice))
+        text: entries.value.find((e) => e.id == entryIdByChoiceId(m.choice))
           .text,
         type: entries.value.find((e) => e.id == entryIdByChoiceId(m.choice))
           .type,
-        id: m.id,
-        choice: choices.value.find((e) => e.id == m.choice).choice_text,
+        id: entries.value.find((e) => e.id == entryIdByChoiceId(m.choice)).id,
+        score: choices.value.find((e) => e.id == m.choice).choice_text,
         content: m.content,
       }));
       const result = result_0.reduce((acc, curr) => {
-        const { group_index, entry, type, choice, content } = curr;
+        const { group_index, text, type, id, score, content } = curr;
         return {
           ...acc,
           [group_index]: [
             ...(acc[group_index] || []),
-            { entry, type, choice, content },
+            { text, type, id, score, content },
           ],
         };
       }, Object.create(null));
@@ -437,9 +449,7 @@ export default {
       const sortedData = Object.fromEntries(
         Object.entries(result).map(([key, arr]) => [
           key,
-          arr
-            .slice()
-            .sort((a, b) => ORDER.indexOf(a.entry) - ORDER.indexOf(b.entry)),
+          arr.slice().sort((a, b) => a.id - b.id),
         ])
       );
 
@@ -483,6 +493,8 @@ export default {
       TEXT,
       ORDER,
       dialogVisible,
+      pollName,
+      getPoll,
       setGroupText,
       md2Html,
       loadMyVote,
@@ -542,13 +554,13 @@ export default {
         getChoices(this.config),
         getEntries(this.config, this.poll_id),
         getStudents(this.config),
-        this.loadGroupTexts(),
+        getPoll(),
       ]);
-      this.choices = responses[0].data;
+      this.loadGroupTexts(), (this.choices = responses[0].data);
       this.entries = responses[1].data;
       this.students = responses[2].data;
+      this.pollName = responses[3].data.find((x) => x.id == this.poll_id).name;
       this.updatedGroupedEntries = this.groupedEntires;
-      console.log(this.groupedEntires);
       // this.loadlinks()
       this.loadMyVote();
     },

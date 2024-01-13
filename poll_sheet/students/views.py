@@ -4,7 +4,7 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from .models import Group, Student, FileModel, ImageModel, Entry, Choice, Vote, Poll
 from rest_framework.views import APIView
-from .permissions import IsStaff, IsVoter, IsAuthorOrReadOnly
+from .permissions import IsStaff, IsVoter, IsAuthorOrReadOnly, ReadOnlyPermission
 from .serializers import (
     EntryReadOnlySerializer,
     GroupSerializer,
@@ -16,6 +16,7 @@ from .serializers import (
     EntrySerializer,
     ChoiceSerializer,
     VoteSerializer,
+    PollSerializer,
 )
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -40,7 +41,14 @@ def find_elements_not_in_list(all_items, my_items):
     return len(elements_not_in_my_items) > 0
 
 
+class PollViewSet(viewsets.ModelViewSet):
+    permission_classes = (ReadOnlyPermission,)
+    queryset = Poll.objects.all()
+    serializer_class = PollSerializer
+
+
 class GroupViewSet(viewsets.ModelViewSet):
+    permission_classes = (ReadOnlyPermission,)
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
@@ -69,11 +77,13 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class StudentViewSet(viewsets.ModelViewSet):
+    permission_classes = (ReadOnlyPermission,)
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
 
 
 class EntryReadOnlyViewSet(viewsets.ModelViewSet):
+    permission_classes = (ReadOnlyPermission,)
     queryset = Entry.objects.all()
     serializer_class = EntryReadOnlySerializer
 
@@ -94,6 +104,7 @@ class EntryViewSet(viewsets.ModelViewSet):
 
 
 class ChoiceViewSet(viewsets.ModelViewSet):
+    permission_classes = (ReadOnlyPermission,)
     queryset = Choice.objects.all()
     serializer_class = ChoiceSerializer
 

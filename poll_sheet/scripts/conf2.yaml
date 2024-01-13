@@ -1,0 +1,11 @@
+name: bk1-pre
+rating scale questions:
+  scale: 5
+  items:
+    - name: test1
+    - name: test2
+    - name: test3
+    - name: test4
+text questions:
+  items:
+    - testtext

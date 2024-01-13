@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from .models import Group, Student, FileModel, ImageModel, Entry, Choice, Vote
+from .models import Group, Student, FileModel, ImageModel, Entry, Choice, Vote, Poll
+
+
+class PollSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Poll
+        fields = "__all__"
 
 
 class GroupSerializer(serializers.ModelSerializer):

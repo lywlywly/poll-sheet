@@ -11,6 +11,7 @@ router.register("readonly-entry", views.EntryReadOnlyViewSet)
 router.register("entry", views.EntryViewSet)
 router.register("choice", views.ChoiceViewSet)
 router.register("vote", views.VoteViewSet)
+router.register("poll", views.PollViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
