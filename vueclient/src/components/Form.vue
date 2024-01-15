@@ -86,7 +86,7 @@
       <div class="content">
         <el-tabs v-model="activeName0" class="demo-tabs" tabPosition="left">
           <el-tab-pane
-            v-for="(entries, key, index0) in groupedEntires"
+            v-for="(entries, key, index0) in updatedGroupedEntries"
             :key="index0"
             :label="'Group ' + key"
             :name="index0"
@@ -127,32 +127,35 @@
           <button @click="submitFile(key)">Submit</button>
           <a :href="links[index0]">slides</a>
         </div> -->
-            <ul class="post">
+            <ol class="post">
               <li v-for="(entry, index) in entries" :key="key">
-                {{ entry.text }}<br />
+                <b>{{ entry.text }}</b
+                ><br />
                 <div class="entry" v-if="entry.type === CHOICE_NUM">
                   <ul class="ul-score">
+                    Strong disagree
+                    <el-radio-group
+                      v-for="(choice, _) in choices.filter(
+                        (c) => c.poll == entry.id
+                      )"
+                      v-model="updatedGroupedEntries[index0 + 1][index].score"
+                      :disabled="key == loginInfo.group"
+                    >
+                      <div class="el-button-container">
+                        <el-radio :label="choice.choice_text" size="large"
+                          ><label></label
+                        ></el-radio>
+                        {{ choice.choice_text }}
+                      </div>
+                    </el-radio-group>
                     <li
                       v-for="(choice, _) in choices.filter(
                         (c) => c.poll == entry.id
                       )"
                       :key="key"
                       class="li-score"
-                    >
-                      <div class="radio-box">
-                        <input
-                          type="radio"
-                          :name="index0.toString() + index.toString()"
-                          :value="choice.choice_text"
-                          v-model="
-                            updatedGroupedEntries[index0 + 1][index].score
-                          "
-                          id="delivery1"
-                          :disabled="key == loginInfo.group"
-                        />
-                        <label for="TODO">{{ choice.choice_text }}</label>
-                      </div>
-                    </li>
+                    ></li>
+                    Strong agree
                   </ul>
                 </div>
                 <div class="entry" v-if="entry.type === TEXT">
@@ -163,7 +166,7 @@
                   ></textarea>
                 </div>
               </li>
-            </ul>
+            </ol>
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -312,7 +315,10 @@ export default {
       myCurrentVote.value = response.data;
       const merged = { ...groupedMyCurrentVotes.value };
       Object.keys(groupedEntires.value).forEach((key) => {
-        if (!(key in merged)) {
+        if (
+          !(key in merged) ||
+          groupedEntires.value[key].length != merged[key].length
+        ) {
           merged[key] = groupedEntires.value[key];
         }
       });
@@ -688,7 +694,7 @@ button {
 }
 
 .content {
-  max-width: 600px;
+  max-width: 750px;
   margin: auto;
   background: white;
   padding: 10px;
@@ -708,6 +714,17 @@ div.files input {
   margin-right: 10px;
   margin-top: 5px;
   margin-bottom: 5px;
+}
+
+.el-button-container {
+  display: flex;
+  width: 30px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-left: 8px;
+  margin-right: 8px;
+  /* height: 300px; */
 }
 
 div.radio-box {
@@ -755,4 +772,21 @@ ul {
 /* li {} */
 
 /* min css */
+</style>
+
+<style>
+.el-button-container .el-radio__label {
+  display: none;
+}
+
+.post .el-radio-group {
+  font-size: unset;
+}
+
+.el-radio {
+  transform: scale(1.7);
+  /* .el-radio__label {
+    padding: 0;
+  } */
+}
 </style>
