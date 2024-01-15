@@ -3,12 +3,13 @@
 <template>
   <header>
     <!-- <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" /> -->
-    <h1>Header Placeholder</h1>
+    <!-- <h1>Header Placeholder</h1> -->
   </header>
   <nav>
-    <router-link to="/form">Voting Form</router-link>
+    <a href="/form/1" class="nav-link">BK1-Proposal</a>
+    <a href="/form/2" class="nav-link">BK1-Presentation</a>
     <!-- <router-link to="/note">Note</router-link> -->
-    <router-link to="/visualization">Visualization</router-link>
+    <!-- <router-link to="/visualization">Visualization</router-link> -->
     <router-link to="/about">About</router-link>
   </nav>
 

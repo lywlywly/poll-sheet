@@ -13,15 +13,15 @@ export const routes = [
     component: HomeView,
   },
   {
-    path: "/form",
-    name: "form",
+    path: "/form/1",
+    name: "form1",
     component: Form,
     props: {
       poll_id: 1,
     },
   },
   {
-    path: "/form2",
+    path: "/form/2",
     name: "form2",
     component: Form,
     props: {

@@ -58,118 +58,93 @@
   </div>
 
   <div class="container">
-    <div class="left">
-      <h2>Your vote</h2>
-      <h3 v-if="Object.keys(groupedMyCurrentVotes).length == 0">
-        You haven't voted yet.
-      </h3>
-      <ul class="mypost">
-        <li v-for="(votes, key, _) in groupedMyCurrentVotes" :key="key">
-          Group
-          <div class="inline-bold">{{ key }}</div>
-          <ul>
-            <li v-for="(vote, _) in votes" :key="key">
-              {{ vote.text }}:
-              <div v-if="vote.type === CHOICE_NUM" class="inline-bold">
-                {{ vote.score }}
-              </div>
-              <div v-if="vote.type === TEXT" class="inline-bold">
-                {{ vote.content }}
-              </div>
-            </li>
-          </ul>
-        </li>
-      </ul>
-    </div>
-    <div class="right">
-      <h3 v-if="!loggedIn" class="center-text">Sign in to vote</h3>
-      <div class="content">
-        <el-tabs v-model="activeName0" class="demo-tabs" tabPosition="left">
-          <el-tab-pane
-            v-for="(entries, key, index0) in updatedGroupedEntries"
-            :key="index0"
-            :label="'Group ' + key"
-            :name="index0"
+    <h3 v-if="!loggedIn" class="center-text">Sign in to vote</h3>
+    <div class="content">
+      <el-tabs v-model="activeName0" class="demo-tabs" tabPosition="left">
+        <el-tab-pane
+          v-for="(entries, key, index0) in updatedGroupedEntries"
+          :key="index0"
+          :label="'Group ' + key"
+          :name="index0"
+        >
+          <table class="group">
+            <tr>
+              <th>Name</th>
+              <th>NetId</th>
+            </tr>
+            <tr v-for="(student, index) in groupedStudents[key]" :key="index">
+              <td>{{ student.name }}</td>
+              <td>{{ student.net_id }}</td>
+            </tr>
+          </table>
+
+          <EditDialog
+            :dialogVisible="dialogVisible"
+            :original-text="groupTexts[key - 1]"
+            @confirmDialog="setGroupText($event, key)"
+            @cancelDialog="dialogVisible = false"
+          ></EditDialog>
+
+          <h3>Project/Group Description</h3>
+
+          <div v-html="md2Html(groupTexts[key - 1])" class="group_text"></div>
+
+          <el-button
+            text
+            @click="dialogVisible = true"
+            v-if="loginInfo.group == key"
           >
-            <table class="group">
-              <tr>
-                <th>Name</th>
-                <th>NetId</th>
-              </tr>
-              <tr v-for="(student, index) in groupedStudents[key]" :key="index">
-                <td>{{ student.name }}</td>
-                <td>{{ student.net_id }}</td>
-              </tr>
-            </table>
+            Edit description
+          </el-button>
 
-            <EditDialog
-              :dialogVisible="dialogVisible"
-              :original-text="groupTexts[key - 1]"
-              @confirmDialog="setGroupText($event, key)"
-              @cancelDialog="dialogVisible = false"
-            ></EditDialog>
-
-            <h3>Group introduction</h3>
-
-            <div v-html="md2Html(groupTexts[key - 1])" class="group_text"></div>
-
-            <el-button
-              text
-              @click="dialogVisible = true"
-              v-if="loginInfo.group == key"
-            >
-              Edit Introduction
-            </el-button>
-
-            <!-- TODO -->
-            <!-- <div class="files">
+          <!-- TODO -->
+          <!-- <div class="files">
           <input type="file" @change="uploadFile" /><br />
           <button @click="submitFile(key)">Submit</button>
           <a :href="links[index0]">slides</a>
         </div> -->
-            <ol class="post">
-              <li v-for="(entry, index) in entries" :key="key">
-                <b>{{ entry.text }}</b
-                ><br />
-                <div class="entry" v-if="entry.type === CHOICE_NUM">
-                  <ul class="ul-score">
-                    Strong disagree
-                    <el-radio-group
-                      v-for="(choice, _) in choices.filter(
-                        (c) => c.poll == entry.id
-                      )"
-                      v-model="updatedGroupedEntries[index0 + 1][index].score"
-                      :disabled="key == loginInfo.group"
-                    >
-                      <div class="el-button-container">
-                        <el-radio :label="choice.choice_text" size="large"
-                          ><label></label
-                        ></el-radio>
-                        {{ choice.choice_text }}
-                      </div>
-                    </el-radio-group>
-                    <li
-                      v-for="(choice, _) in choices.filter(
-                        (c) => c.poll == entry.id
-                      )"
-                      :key="key"
-                      class="li-score"
-                    ></li>
-                    Strong agree
-                  </ul>
-                </div>
-                <div class="entry" v-if="entry.type === TEXT">
-                  <textarea
-                    class="vote-text"
-                    v-model="updatedGroupedEntries[index0 + 1][index].content"
+          <ol class="post">
+            <li v-for="(entry, index) in entries" :key="key">
+              <b>{{ entry.text }}</b
+              ><br />
+              <div class="entry" v-if="entry.type === CHOICE_NUM">
+                <ul class="ul-score">
+                  Strong disagree
+                  <el-radio-group
+                    v-for="(choice, _) in choices.filter(
+                      (c) => c.poll == entry.id
+                    )"
+                    v-model="updatedGroupedEntries[index0 + 1][index].score"
                     :disabled="key == loginInfo.group"
-                  ></textarea>
-                </div>
-              </li>
-            </ol>
-          </el-tab-pane>
-        </el-tabs>
-      </div>
+                  >
+                    <div class="el-button-container">
+                      <el-radio :label="choice.choice_text" size="large"
+                        ><label></label
+                      ></el-radio>
+                      {{ choice.choice_text }}
+                    </div>
+                  </el-radio-group>
+                  <li
+                    v-for="(choice, _) in choices.filter(
+                      (c) => c.poll == entry.id
+                    )"
+                    :key="key"
+                    class="li-score"
+                  ></li>
+                  Strong agree
+                </ul>
+              </div>
+              <div class="entry" v-if="entry.type === TEXT">
+                <textarea
+                  class="vote-text"
+                  v-model="updatedGroupedEntries[index0 + 1][index].content"
+                  :disabled="key == loginInfo.group"
+                ></textarea>
+              </div>
+            </li>
+          </ol>
+        </el-tab-pane>
+      </el-tabs>
       <div class="submit-button">
         <button @click="preview">Preview</button>
         <button v-if="loggedIn" @click="postVotes">Submit</button>
