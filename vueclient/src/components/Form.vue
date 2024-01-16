@@ -1,14 +1,23 @@
 <template>
-  <h1>Voting Form</h1>
-  <h2>{{ pollName }}</h2>
-  <h3 v-if="!loggedIn">You are not logged in</h3>
-  <div v-if="loggedIn">
-    Name:
-    <div class="inline-bold">{{ loginInfo.username }}</div>
-  </div>
-  <div v-if="loggedIn">
-    Group:
-    <div class="inline-bold">{{ loginInfo.status ?? loginInfo.group }}</div>
+  <div class="container2">
+    <h1>Voting Form</h1>
+    <div>
+      poll name:
+      <div class="inline-bold">{{ pollName }}</div>
+    </div>
+    <div>
+      Deadline:
+      <div class="inline-bold">{{ expiringDatetime }}</div>
+    </div>
+    <h3 v-if="!loggedIn">You are not logged in</h3>
+    <div v-if="loggedIn">
+      Name:
+      <div class="inline-bold">{{ loginInfo.username }}</div>
+    </div>
+    <div v-if="loggedIn">
+      Group:
+      <div class="inline-bold">{{ loginInfo.status ?? loginInfo.group }}</div>
+    </div>
   </div>
 
   <div class="login">
@@ -213,6 +222,7 @@ export default {
     const updatedGroupedEntries = ref({});
     const dialogVisible = ref(false);
     const pollName = ref("");
+    const expiringDatetime = ref("");
 
     const setGroupText = async (text, groupId) => {
       console.log(text);
@@ -475,6 +485,7 @@ export default {
       ORDER,
       dialogVisible,
       pollName,
+      expiringDatetime,
       getPoll,
       setGroupText,
       md2Html,
@@ -540,7 +551,12 @@ export default {
       this.loadGroupTexts(), (this.choices = responses[0].data);
       this.entries = responses[1].data;
       this.students = responses[2].data;
-      this.pollName = responses[3].data.find((x) => x.id == this.poll_id).name;
+      const poll = responses[3].data.find((x) => x.id == this.poll_id);
+      this.pollName = poll.name;
+      this.expiringDatetime = new Date(poll.expiring)
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
       this.updatedGroupedEntries = this.groupedEntires;
       // this.loadlinks()
       this.loadMyVote();
@@ -587,6 +603,14 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.container2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* height: 100vh; */
 }
 
 .left {
