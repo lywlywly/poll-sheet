@@ -1,6 +1,7 @@
 from functools import reduce
 from django.forms import ValidationError
 from django.shortcuts import render
+import pytz
 from rest_framework import viewsets, status
 from .models import Group, Student, FileModel, ImageModel, Entry, Choice, Vote, Poll
 from rest_framework.views import APIView
@@ -26,6 +27,7 @@ import pandas as pd
 from django.http import HttpResponse
 from io import BytesIO
 from rest_framework import permissions
+from datetime import datetime
 
 
 # Create your views here.
@@ -156,10 +158,19 @@ class VoteViewSet(viewsets.ModelViewSet):
         poll_id = request_data["poll_id"]
         choice_id = int(request.data["choice"])
         choice = Choice.objects.get(id=choice_id)
-        poll = Entry.objects.get(id=choice.poll.id)
+        entry = Entry.objects.get(id=choice.poll.id)
         myVotes = Vote.objects.filter(voter=request.user.student)
+        poll = entry.group_id.poll_id
+
+        current_datetime = datetime.now(pytz.utc)
+        if current_datetime > poll.expiring:
+            return Response(
+                "The poll has ended",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # choice=choice_id for same choice
-        if len(myVotes.filter(choice__poll=poll)) != 0:
+        if len(myVotes.filter(choice__poll=entry)) != 0:
             return Response(
                 "You already have voted for the same entry",
                 status=status.HTTP_400_BAD_REQUEST,
